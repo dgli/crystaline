@@ -31,7 +31,8 @@ public class Shiny extends BasicGame {
 	static Input in;
 	static AppGameContainer app;
 	static float currentPitch;
-	static int [] history = new int [X_SIZE];
+	static float[] history = new float[X_SIZE],
+			pitchHistory = new float[X_SIZE];
 
 	public Shiny(String title) {
 		super(title);
@@ -39,13 +40,12 @@ public class Shiny extends BasicGame {
 	}
 
 	public static void main(String[] args) {
-		for(int x = 0; x < X_SIZE; x++){
-			history [x] = 0;
+		for (int x = 0; x < X_SIZE; x++) {
+			history[x] = 0;
 		}
-		
+
 		try {
-			app = new AppGameContainer(new Shiny(
-					"Project Crystaline V0.2"));
+			app = new AppGameContainer(new Shiny("Project Crystaline V0.2"));
 			app.setDisplayMode(X_SIZE, Y_SIZE, false);
 			app.setSmoothDeltas(true);
 			app.setVSync(true);
@@ -57,7 +57,6 @@ public class Shiny extends BasicGame {
 		}
 	}
 
-	
 	private static class Ball {
 		float radius = 10;
 		double speed = 0;
@@ -75,13 +74,12 @@ public class Shiny extends BasicGame {
 		public Color colorShift(float pitch) {
 			if (!(pitch > 30 && pitch < 1000))
 				return c;
-			
-			if (in.isKeyDown(Input.KEY_C))
-			{
 
-				min = (float) ((99*min+pitch-12)/100);
+			if (in.isKeyDown(Input.KEY_C)) {
+
+				min = (float) ((99 * min + pitch - 12) / 100);
 			}
-			
+
 			pitch -= min;
 			float multiplyer = pitch / cycleSize / numCycles;
 			float r = 1;
@@ -134,7 +132,7 @@ public class Shiny extends BasicGame {
 					+ (12D * Math
 							.log((float) AudioInputProcessor.frequency / 440D))
 					/ Math.log(2D);
-			c = colorShift((float) temp );
+			c = colorShift((float) temp);
 			currentPitch = (float) temp;
 
 			x += speed * Math.cos(dir);
@@ -182,17 +180,27 @@ public class Shiny extends BasicGame {
 
 			public void update(Graphics g) {
 				g.setColor(c);
+
+				g.setLineWidth(1);
 				g.drawLine(x + 5 * time / MAX_TIME, y, x - 5 * time / MAX_TIME,
 						y);
 				g.drawLine(x, y + 5 * time / MAX_TIME, x, y - 5 * time
 						/ MAX_TIME);
+
+//				g.setLineWidth(2);
+//				if (time <= 2)
+//					return;
+//				g.drawLine(x + 5 * time / MAX_TIME - 2, y, x - 5 * time
+//						/ MAX_TIME + 2, y);
+//				g.drawLine(x, y + 5 * time / MAX_TIME - 2, x, y - 5 * time
+//						/ MAX_TIME + 2);
 
 			}
 		}
 
 		public void drawBall() {
 			g.setColor(c);
-			//g.drawOval(x, y, 2 * radius, 2 * radius);
+			// g.drawOval(x, y, 2 * radius, 2 * radius);
 			for (int i = 0; i < particles.size(); i++) {
 				particles.get(i).update(g);
 			}
@@ -207,26 +215,36 @@ public class Shiny extends BasicGame {
 		for (int i = 0; i < balls.length; i++) {
 			balls[i].drawBall();
 		}
-		
-		String[] notes = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}; 
-		
-		String note = (currentPitch > 0) ? notes[((int) (currentPitch+0.5)%12)] : "NaN";
+
+		String[] notes = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#",
+				"A", "A#", "B" };
+
+		String note = (currentPitch > 0) ? notes[((int) (currentPitch + 0.5) % 12)]
+				: "NaN";
 
 		g.setColor(Color.white);
-		
-		g.drawString((new StringBuilder("Note: ")).append(note).toString(), 20, 20);
-		g.drawString((new StringBuilder("Freq: ")).append(AudioInputProcessor.frequency).toString(), 20, 40);
-		g.drawString((new StringBuilder("Pitch No.: ")).append(currentPitch).toString(), 20, 60);
-		
-		//g.drawLine(0, (currentPitch * 5), 20, (currentPitch * 5));
 
-		//g.setLineWidth(4);
+		g.drawString((new StringBuilder("Note: ")).append(note).toString(), 20,
+				20);
+		g.drawString(
+				(new StringBuilder("Freq: ")).append(
+						AudioInputProcessor.frequency).toString(), 20, 40);
+		g.drawString((new StringBuilder("Pitch No.: ")).append(currentPitch)
+				.toString(), 20, 60);
 
-		for(int x = 0; x < X_SIZE; x++){
-			g.fillRect(X_SIZE - x, Y_SIZE - (history[x] * 5), 1, 5);
+		// g.drawLine(0, (currentPitch * 5), 20, (currentPitch * 5));
+
+		// g.setLineWidth(4);
+
+		for (int x = 0; x < X_SIZE; x++) {
+			g.setColor(Color.white);
+			g.fillRect(X_SIZE - x, Y_SIZE + 279 - (history[x] * 8), 1, 10);
+			g.setLineWidth(2);
+			g.setColor(Color.red);
+			g.fillRect(X_SIZE - x, Y_SIZE + 283 - (pitchHistory[x] * 8), 1, 2);
 		}
-		
-		//g.setLineWidth(1);
+
+		// g.setLineWidth(1);
 	}
 
 	@Override
@@ -270,9 +288,11 @@ public class Shiny extends BasicGame {
 			balls[i].update(delta);
 		}
 
-		for(int x = X_SIZE - 1; x > 0; x--){
+		for (int x = X_SIZE - 1; x > 0; x--) {
 			history[x] = history[x - 1];
+			pitchHistory[x] = pitchHistory[x - 1];
 		}
-		history[0] = (int) (currentPitch+0.5);
+		pitchHistory[0] = currentPitch;
+		history[0] = (int) (currentPitch + 0.5);
 	}
 }
